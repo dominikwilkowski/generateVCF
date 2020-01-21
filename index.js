@@ -4,8 +4,10 @@ const request = require('request');
 const path = require('path');
 const fs = require('fs');
 
+require('dotenv').config();
+
 async function getSlackInfo() {
-	const SLACK_URL = 'https://slack.com/api/users.list?token=xoxp-2191118519-334021722227-825339503718-e143c731d96b8cde6f45d8773ff83ca2';
+	const SLACK_URL = `https://slack.com/api/users.list?token=${ process.env.SLACK }`;
 	return await fetch(SLACK_URL)
 		.then(res => res.json());
 }
