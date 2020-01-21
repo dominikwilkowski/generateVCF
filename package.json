@@ -1,0 +1,15 @@
+{
+	"name": "generateVCF",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {},
+	"keywords": [],
+	"author": "",
+	"license": "GPL-3.0",
+	"dependencies": {
+		"node-fetch": "^2.6.0",
+		"request": "^2.88.0",
+		"vcards-js": "^2.10.0"
+	}
+}
