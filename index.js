@@ -1,15 +1,20 @@
-const vCardsJS = require('vcards-js');
-const fetch = require('node-fetch');
-const request = require('request');
-const path = require('path');
-const fs = require('fs');
+import vCardsJS from 'vcards-js';
+import fetch from 'node-fetch';
+import request from 'request';
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 
-require('dotenv').config();
+dotenv.config();
 
 async function getSlackInfo() {
 	const SLACK_URL = `https://slack.com/api/users.list?token=${ process.env.SLACK }`;
-	return await fetch(SLACK_URL)
-		.then(res => res.json());
+	return await fetch(SLACK_URL).then(res => res.json());
+}
+
+async function getSlackProfil( user ) {
+	const SLACK_URL = `https://slack.com/api/users.profile.get?user=${ user }&token=${ process.env.SLACK }`;
+	return await fetch(SLACK_URL).then(res => res.json());
 }
 
 function download(uri, filename) {
@@ -20,12 +25,21 @@ function download(uri, filename) {
 	});
 };
 
-function findImage( db, name ) {
-	const user = db.members.filter( member => member.name === name.trim());
+function findImage( db, id ) {
+	const user = db.members.filter( member => member.id === id.trim());
 
 	return user[0]
 		? user[0].profile.image_192
 		: '';
+}
+
+function formatNumber( number, country ) {
+	if(country !== 'Australia') {
+		return number;
+	}
+	else {
+		return number.startsWith('0') ? `+61${number.slice(1)}` : number;
+	}
 }
 
 function mapData( data ) {
@@ -34,7 +48,7 @@ function mapData( data ) {
 	return {
 		squad: cell[0],
 		nick: cell[1],
-		slack: cell[2].replace('@',''),
+		slack: cell[2],
 		pronouns: cell[3],
 		first: cell[4],
 		middle: cell[5],
@@ -46,11 +60,11 @@ function mapData( data ) {
 		zip: cell[11],
 		dob: cell[12],
 		persoanlEmail: cell[14],
-		mobile: cell[15],
+		mobile: formatNumber(cell[15], cell[10]),
 		platform: cell[16],
 		emergencyName: cell[17],
 		emergencyRelationship: cell[18],
-		emergencyNumber: cell[19],
+		emergencyNumber: formatNumber(cell[19], cell[10]),
 		food: cell[20],
 		allergies: cell[21],
 		workEmail: cell[22],
@@ -67,6 +81,7 @@ async function writeFiles( pathToCSV = 'people.tsv') {
 		lines = fs
 			.readFileSync(path.normalize( pathToCSV ))
 			.toString()
+			.trim()
 			.split('\n');
 	}
 	catch( error ) {
@@ -152,7 +167,7 @@ async function writeFiles( pathToCSV = 'people.tsv') {
 				vCard.workEmail = workEmail;
 				vCard.email = persoanlEmail;
 
-				vCard.note = allergies === 'none'
+				vCard.note = allergies === 'none' || allergies === ''
 					? null
 					: `Allergies: ${allergies}`;
 
@@ -160,7 +175,7 @@ async function writeFiles( pathToCSV = 'people.tsv') {
 			}
 	});
 
-	console.log('\nFiles successfully written into ./output/ folder\n');
+	console.log('\nFiles successfully written into "./output/" folder\n');
 }
 
 if (process.argv.includes('write')) {
@@ -169,4 +184,18 @@ if (process.argv.includes('write')) {
 		: undefined;
 
 	writeFiles( pathToCSV );
+}
+
+if (process.argv.includes('lookup')) {
+	(async () => {
+		// Get the list of users
+		const slackDB = await getSlackInfo();
+		slackDB
+			.members
+			.filter((member) => !member.deleted)
+			.filter((member) => !member.is_bot && !member.is_app_user)
+			.map((member => {
+				console.log(member.name,member.id);
+		}));
+	})();
 }

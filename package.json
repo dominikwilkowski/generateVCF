@@ -3,13 +3,16 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
-	"scripts": {},
+	"scripts": {
+		"nuke": "rm -rf node_modules && rm yarn.lock"
+	},
+	"type": "module",
 	"keywords": [],
 	"author": "",
 	"license": "GPL-3.0",
 	"dependencies": {
-		"dotenv": "^8.2.0",
-		"node-fetch": "^2.6.1",
+		"dotenv": "^14.3.2",
+		"node-fetch": "^3.2.0",
 		"request": "^2.88.2",
 		"vcards-js": "^2.10.0"
 	}
